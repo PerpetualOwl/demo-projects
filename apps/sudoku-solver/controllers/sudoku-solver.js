@@ -20,6 +20,35 @@ class SudokuSolver {
       return [true, "Invalid characters in puzzle"];
     }
 
+    // check that input is valid
+    for (let row = 0; row < 9; row++) {
+      if (/(.).*\1/.test(puzzleString.slice(row * 9, (row + 1) * 9).replace(/\./g, ""))) {
+        return [true, "Input has repeated entries in the same row"];
+      }
+    }
+    for (let column = 0; column < 9; column++) {
+      let str = "";
+      for (let i = 0; i < 9; i++) {
+        str += puzzleString.charAt(i * 9 + column);
+      }
+      if (/(.).*\1/.test(str.replace(/\./g, ""))) {
+        return [true, "Input has repeated entries in the same column"];
+      }
+    }
+    for (let sectorRow = 0; sectorRow < 3; sectorRow++) {
+      for (let sectorColumn = 0; sectorColumn < 3; sectorColumn++) {
+        let str = "";
+        for (let i = 0; i < 3; i++) { // row
+          for (let j = 0; j < 3; j++) { // column
+            str += puzzleString.charAt(sectorRow * 27 + sectorColumn * 3 + i * 9 + j);
+          }
+        }
+        if (/(.).*\1/.test(str.replace(/\./g, ""))) {
+          return [true, "Input has repeated entries in the same sector"];
+        }
+      }
+    }
+
     // No invalid data returns false and empty error string
     return [false, ""];
   }
@@ -197,11 +226,11 @@ class SudokuSolver {
   // for Sudoku solution (non-duplication across rows, columns, and boxes)
   solveSudoku(grid) {
     this._recursions++;
-    // Tested the recursion count for the "hardest sudoku" puzzle
-    // Puzzle was fetched from https://www.conceptispuzzles.com/index.aspx?uri=info/article/424
-    // Recursion count was 49559 - rounded to 50000 for nice number + a bit of buffer.
-    // Anything exceeding this should be an unsolvable puzzle.
-    if (this._recursions > 50000) {
+    // 250000 is a good limit to ensure the speed of the algorithm.
+    // Certain puzzles like 9..8...........5............2..1...3.1.....6....4...7.7.86.........3.1..4.....2..
+    // can take up to a minute for a browser to brute force, so these edge cases cannot be reasonably covered
+    // without the detection of unsolvable puzzles becoming unreasonably slow in some cases as well.
+    if (this._recursions > 250000) {
       return false;
     }
     // If the sudoku grid has been filled, we are done
